@@ -133,64 +133,64 @@ def downloadConfigFile(bucketName,accessKey, secretKey):
             logging.error(f"Unexpected error: {e}")
       
 # #To get all file from the folder
-# def uploadFolderToS3_(dataFolderPath, bucketName, accessKey, secretKey):
-    currentDatetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    prefix = f"{userName}/{deviceName}/"
+# # def uploadFolderToS3_(dataFolderPath, bucketName, accessKey, secretKey):
+#     currentDatetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#     prefix = f"{userName}/{deviceName}/"
     
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=accessKey,
-        aws_secret_access_key=secretKey
-    )
+#     s3_client = boto3.client(
+#         's3',
+#         aws_access_key_id=accessKey,
+#         aws_secret_access_key=secretKey
+#     )
     
-    for root, dirs, files in os.walk(dataFolderPath):
+#     for root, dirs, files in os.walk(dataFolderPath):
        
-        for file in files:
-            if file.endswith('.meta'):
-                continue
+#         for file in files:
+#             if file.endswith('.meta'):
+#                 continue
             
-            localFilePath = os.path.join(root, file)
-            relativePath = os.path.relpath(localFilePath, dataFolderPath).replace("\\", "/")
+#             localFilePath = os.path.join(root, file)
+#             relativePath = os.path.relpath(localFilePath, dataFolderPath).replace("\\", "/")
             
           
-            if file == "configdata.csv":
-                s3ObjectName = f"{userName}/{deviceName}/{file}"
-                try:
-                    # Check if configdata.csv exists in S3
-                    s3_client.head_object(Bucket=bucketName, Key=s3ObjectName)
-                    logging.info(f"'configdata.csv' already exists on S3. Skipping upload.")
-                    continue  # Skip upload if exists
-                except s3_client.exceptions.ClientError as e:
-                    if int(e.response['Error']['Code']) == 404:
-                        logging.info(f"'configdata.csv' not found on S3. Uploading...")
-                        uploadToAws(localFilePath, bucketName, s3ObjectName, accessKey, secretKey)
-                    else:
-                        logging.error(f"Error checking configdata.csv on S3: {e}")
-                continue  # Skip rest of loop for configdata.csv
+#             if file == "configdata.csv":
+#                 s3ObjectName = f"{userName}/{deviceName}/{file}"
+#                 try:
+#                     # Check if configdata.csv exists in S3
+#                     s3_client.head_object(Bucket=bucketName, Key=s3ObjectName)
+#                     logging.info(f"'configdata.csv' already exists on S3. Skipping upload.")
+#                     continue  # Skip upload if exists
+#                 except s3_client.exceptions.ClientError as e:
+#                     if int(e.response['Error']['Code']) == 404:
+#                         logging.info(f"'configdata.csv' not found on S3. Uploading...")
+#                         uploadToAws(localFilePath, bucketName, s3ObjectName, accessKey, secretKey)
+#                     else:
+#                         logging.error(f"Error checking configdata.csv on S3: {e}")
+#                 continue  # Skip rest of loop for configdata.csv
 
-            # For other files
-            s3ObjectName = prefix + relativePath
-            try:
-                # Try to get metadata from S3
-                response = s3_client.head_object(Bucket=bucketName, Key=s3ObjectName)
-                s3_last_modified = response['LastModified'].timestamp()
-                local_last_modified = os.path.getmtime(localFilePath)
+#             # For other files
+#             s3ObjectName = prefix + relativePath
+#             try:
+#                 # Try to get metadata from S3
+#                 response = s3_client.head_object(Bucket=bucketName, Key=s3ObjectName)
+#                 s3_last_modified = response['LastModified'].timestamp()
+#                 local_last_modified = os.path.getmtime(localFilePath)
 
-                # Compare timestamps
-                if local_last_modified > s3_last_modified:
-                    print(f"File updated locally: {file}. Uploading...")
-                    uploadToAws(localFilePath, bucketName, s3ObjectName, accessKey, secretKey)
-                else:
-                    print(f"No changes in: {file}. Skipping upload.")
+#                 # Compare timestamps
+#                 if local_last_modified > s3_last_modified:
+#                     print(f"File updated locally: {file}. Uploading...")
+#                     uploadToAws(localFilePath, bucketName, s3ObjectName, accessKey, secretKey)
+#                 else:
+#                     print(f"No changes in: {file}. Skipping upload.")
 
-            except s3_client.exceptions.ClientError as e:
-                error_code = int(e.response['Error']['Code'])
-                if error_code == 404:
-                    # File does not exist on S3, upload it
-                    print(f"File not found on S3: {file}. Uploading...")
-                    uploadToAws(localFilePath, bucketName, s3ObjectName, accessKey, secretKey)
-                else:
-                    logging.error(f"Error checking {file} on S3: {e}")
+#             except s3_client.exceptions.ClientError as e:
+#                 error_code = int(e.response['Error']['Code'])
+#                 if error_code == 404:
+#                     # File does not exist on S3, upload it
+#                     print(f"File not found on S3: {file}. Uploading...")
+#                     uploadToAws(localFilePath, bucketName, s3ObjectName, accessKey, secretKey)
+#                 else:
+#                     logging.error(f"Error checking {file} on S3: {e}")
 def sync_folder_to_s3(local_folder, bucket_name):
    
     command = f'aws s3 sync "{local_folder}" s3://{bucketName}/{userName}/{deviceName}/ --exclude "configdata.csv" --exclude "*.meta"'
