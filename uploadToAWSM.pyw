@@ -4,17 +4,17 @@ import logging
 import os
 import sys
 import subprocess
-
+import psutil
 
 
 # === Configuration ===
 BUCKET_NAME = 'homerclouds'
 # BUCKET_NAME = 'homer-data'
 
-UPLOAD_STATUS_FILE = "C:/DeviceSetups/PLUTO/uploadStatus.txt"
-APP_INFO_FILE = "C:/AppSetups/Pluto/appInfo.txt"
-LOG_FILE_PATH = "C:/pythonscripts/awsUploaderLog.txt"
-LOCK_FILE_PATH = "C:/pythonscripts/upload.lock"
+UPLOAD_STATUS_FILE = "C:/DeviceSetups/Mars/uploadStatus.txt"
+APP_INFO_FILE = "C:/AppSetups/Mars/appInfo.txt"
+LOG_FILE_PATH = "C:/pythonscripts/awsUploaderLogM.txt"
+LOCK_FILE_PATH = "C:/pythonscripts/uploadM.lock"
 UPLOAD_NEEDED = "upload_needed"
 UPLOAD_DONE = "no_upload"
 
@@ -25,14 +25,10 @@ def is_another_instance_running():
         with open(LOCK_FILE_PATH, 'r') as f:
             try:
                 pid = int(f.read().strip())
-                # Try sending signal 0 (just checks if process exists)
-                os.kill(pid, 0)
-                return True  # Process exists
-            except (ValueError, OSError):
-                # ValueError: Not a number
-                # OSError: No such process
+                if psutil.pid_exists(pid):
+                    return True
+            except Exception:
                 pass
-        # If we're here, the process is dead, remove stale lock
         os.remove(LOCK_FILE_PATH)
     return False
 
